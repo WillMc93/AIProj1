@@ -35,10 +35,10 @@ def assign_value(values, box, value):
 def naked_twins(values):
     """Eliminate values using the naked twins strategy.
     Args:
-    values(dict): a dictionary of the form {'box_name': '123456789', ...}
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
 
     Returns:
-    the values dictionary with the naked twins eliminated from peers.
+        the values dictionary with the naked twins eliminated from peers.
     """
 
     # Find all instances of naked twins
@@ -51,8 +51,8 @@ def grid_values(grid):
         grid(string) - A grid in string form.
     Returns:
         A grid in dictionary form
-        Keys: The boxes, e.g., 'A1'
-        Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
+            Keys: The boxes, e.g., 'A1'
+            Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
     # Taken from Strategy 1: Elimination lesson
     values = []
@@ -68,7 +68,7 @@ def display(values):
     """
     Display the values as a 2-D grid.
     Args:
-    values(dict): The sudoku in dictionary form
+        values(dict): The sudoku in dictionary form
     """
     # Taken from Strategy 1: Elimination lesson
     boxes = cross(rows, cols)
