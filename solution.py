@@ -77,7 +77,7 @@ def display(values):
     for row in rows:
         print(''.join(values[row+col].center(width)+('|' if col in '36' else '')
                       for col in cols))
-        if r in 'CF': print(line)
+        if row in 'CF': print(line)
     return
 
 
@@ -85,7 +85,8 @@ def eliminate(values):
     solved = [key for key in values.keys() if len(values[key]) == 1]
     for idx in solved:
         for peer in peers[idx]:
-            values[peer] = values[peer].replace(values[idx], '')
+            assign_value(values, peer, values[peer].replace(values[idx], ''))
+            #values[peer] = values[peer].replace(values[idx], '')
     return values
 
 def only_choice(values):
@@ -93,7 +94,8 @@ def only_choice(values):
         for i in cols:
             place = [box for box in unit if i in values[box]]
             if len(place) == 1:
-                values[place[0]] = i
+                assign_value(values, place[0], i)
+                #values[place[0]] = i
     return values
 
 def solved(values, length = 1):
@@ -101,12 +103,17 @@ def solved(values, length = 1):
 
 def reduce_puzzle(values):
     stalled = False
+    print("REDUCING")
     while not stalled:
         solved_before = solved(values)
+        print("Solved before: ", solved_before)
 
         values = only_choice(eliminate(values))
 
         solved_after = solved(values)
+        print("Solved after: ", solved_after)
+
+        stalled = solved_before == solved_after
 
         if solved(values, 0):
             return False
@@ -124,7 +131,7 @@ def search(values):
     _, box = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
 
     for value in values[box]:
-        print("Starting search: ", values[box])
+        print("SEARCHING")
         puzzle = values.copy()
         puzzle[box] = value
         run = search(puzzle)
@@ -140,11 +147,13 @@ def solve(grid):
     Returns:
     The dictionary representation of the final sudoku grid. False if no solution exists.
     """
-    print("Solving")
+    print("Solving...")
     return search(grid_values(grid))
 
 if __name__ == '__main__':
+    grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    display(solve(grid2))
     display(solve(diag_sudoku_grid))
 
 
