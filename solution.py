@@ -24,6 +24,7 @@ unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
+current_test = [1,2,3]
 
 # Function Declarations
 def assign_value(values, box, value):
@@ -130,7 +131,7 @@ def num_possible(values, length = 1):
 	# Return number of boxes with number of possibilities == length
 	return len([box for box in values.keys() if len(values[box]) == length])
 
-def reduce_puzzle(values, test=[1,2,3]):
+def reduce_puzzle(values, test = current_test):
 	stalled = False
 	#print("REDUCING")
 	funcs = {1: eliminate,
@@ -184,15 +185,29 @@ def solve(grid):
 if __name__ == '__main__':
 	import timeit
 
-	tests = [[1,2,3], [2,1,3], [2,3,1],
-			 [1,3,2], [3,2,1], [3,1,2]]
+	tests = [[1,2,3], [2,1,3], [3,2,1],
+			 [1,3,2], [2,3,1], [3,1,2]]
+	results = []
+	runs = 5000
 
-	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
 	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-	#display(solve(grid2))
-	start_time = timeit.default_timer()
-	display(solve(diag_sudoku_grid))
-	print('Time: ', timeit.default_timer() - start_time)
+	for test in (tests):
+		current_test = test
+		sum_ = 0
+		for r in range(runs):
+			if r % 200 == 0:
+				print("Testing: {}  Run: {}".format(test, r))
+			start_time = timeit.default_timer()
+			#display(solve(diag_sudoku_grid))
+			solve(diag_sudoku_grid)
+			total = timeit.default_timer() - start_time
+
+			sum_ += total
+		results.append(sum_ / runs)
+
+	print([(r, results[r]) for r in range(len(results))])
+	best = (results.index(min(results)), min(results))
+	print(best)
 
 	"""
 	try:
