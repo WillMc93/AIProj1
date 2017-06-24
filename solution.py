@@ -1,20 +1,29 @@
-# Global Variable Declarations
+assignments = []
+rows = 'ABCDEFGHI'
+cols = '123456789'
+
 def cross(A, B): # needed here
 	"Cross product of elements in A and elements in B."
 	return [a+n for a in A for n in B]
 
-assignments = []
-rows = 'ABCDEFGHI'
-cols = '123456789'
+def generate_diagonals():
+	A = []
+	B = []
+	for i in range(len(rows)):
+		A.append(rows[i]+cols[i])
+		B.append(rows[i]+cols[-i - 1])
+	return [A, B]
 
 boxes = cross(rows, cols)
 
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-unitlist = row_units + column_units + square_units
+diagonal_units = generate_diagonals()
+unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
 
 # Function Declarations
 def assign_value(values, box, value):
@@ -42,24 +51,27 @@ def naked_twins(values):
 	"""
 
 	# Find all instances of naked twins
-	twinlist =[]
+	twinlist = []
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
-	bigtwinlist = [(box1, box2) for box1 in twinlist for box2 in peers[box1] \
-				if set(values[box1] == set(values[box2]))]
+	bigtwinlist = [(box1, box2) for box1 in pairlist for box2 in peers[box1] \
+				if set(values[box1]) == set(values[box2])]
+	# Eliminate duplicate tuples, probably unnecessary
 	for tupl in bigtwinlist:
-		if reversed(tupl) not in twinlist:
-			twinlist.append((x,y))
+		if tupl[::-1] not in twinlist:
+			twinlist.append(tupl)
+	#print(len(bigtwinlist), len(twinlist))
 
 	# Eliminate the naked twins as possibilities for their peers
-	for twin in twinlist:
+	for twins in twinlist:
 		# get only mutual peers
-		mutual = set(twin[0]) & set(twin[1])
+		mutual = set(peers[twins[0]]) & set(peers[twins[1]])
+		twin = twins[0]
 
 		for peer in mutual:
 			if len(values[peer]) > 2:
-				for i in value(twin[0]):
-					assign_values(values, peer, values[peer].replace(i, ''))
-
+				for i in values[twin]:
+					assign_value(values, peer, values[peer].replace(i, ''))
+	#print(values)
 	return values
 
 def grid_values(grid):
@@ -117,7 +129,7 @@ def only_choice(values):
 
 
 def solved(values, length = 1):
-	# Return number of boxes with number of possibilities == len
+	# Return number of boxes with number of possibilities == length
 	return len([box for box in values.keys() if len(values[box]) == length])
 
 def reduce_puzzle(values):
@@ -127,7 +139,9 @@ def reduce_puzzle(values):
 		solved_before = solved(values)
 		#print("Solved before: ", solved_before)
 
-		values = only_choice(naked_twins(eliminate(values)))
+		values = eliminate(values)
+		values = only_choice(values)
+		values = naked_twins(values)
 
 		solved_after = solved(values)
 		#print("Solved after: ", solved_after)
@@ -173,7 +187,6 @@ if __name__ == '__main__':
 	#display(solve(grid2))
 	display(solve(diag_sudoku_grid))
 
-"""
 	try:
 		from visualize import visualize_assignments
 		visualize_assignments(assignments)
@@ -182,4 +195,3 @@ if __name__ == '__main__':
 		pass
 	except:
 		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
-"""
