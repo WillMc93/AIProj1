@@ -1,7 +1,7 @@
 # Global Variable Declarations
 def cross(A, B): # needed here
-    "Cross product of elements in A and elements in B."
-    return [a+n for a in A for n in B]
+	"Cross product of elements in A and elements in B."
+	return [a+n for a in A for n in B]
 
 assignments = []
 rows = 'ABCDEFGHI'
@@ -18,150 +18,168 @@ peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
 # Function Declarations
 def assign_value(values, box, value):
-    """
-    Please use this function to update your values dictionary!
-    Assigns a value to a given box. If it updates the board record it.
-    """
+	"""
+	Please use this function to update your values dictionary!
+	Assigns a value to a given box. If it updates the board record it.
+	"""
 
-    # Don't waste memory appending actions that don't actually change any values
-    if values[box] == value:
-        return values
+	# Don't waste memory appending actions that don't actually change any values
+	if values[box] == value:
+		return values
 
-    values[box] = value
-    if len(value) == 1:
-        assignments.append(values.copy())
-    return values
+	values[box] = value
+	if len(value) == 1:
+		assignments.append(values.copy())
+	return values
 
 def naked_twins(values):
-    """Eliminate values using the naked twins strategy.
-    Args:
-        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+	"""Eliminate values using the naked twins strategy.
+	Args:
+		values(dict): a dictionary of the form {'box_name': '123456789', ...}
 
-    Returns:
-        the values dictionary with the naked twins eliminated from peers.
-    """
+	Returns:
+		the values dictionary with the naked twins eliminated from peers.
+	"""
 
-    # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
+	# Find all instances of naked twins
+	twinlist =[]
+	pairlist = [box for box in values.keys() if len(values[box]) == 2]
+	bigtwinlist = [(box1, box2) for box1 in twinlist for box2 in peers[box1] \
+				if set(values[box1] == set(values[box2]))]
+	for tupl in bigtwinlist:
+		if reversed(tupl) not in twinlist:
+			twinlist.append((x,y))
+
+	# Eliminate the naked twins as possibilities for their peers
+	for twin in twinlist:
+		# get only mutual peers
+		mutual = set(twin[0]) & set(twin[1])
+
+		for peer in mutual:
+			if len(values[peer]) > 2:
+				for i in value(twin[0]):
+					assign_values(values, peer, values[peer].replace(i, ''))
+
+	return values
 
 def grid_values(grid):
-    """
-    Convert grid into a dict of {square: char} with '123456789' for empties.
-    Args:
-        grid(string) - A grid in string form.
-    Returns:
-        A grid in dictionary form
-            Keys: The boxes, e.g., 'A1'
-            Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
-    """
-    # Taken from Strategy 1: Elimination lesson
-    values = []
-    for box in grid:
-        if box == '.':
-            values.append(cols) # cols being 1 - 9
-        elif box in cols:
-            values.append(box)
-    assert len(values) == 81
-    return dict(zip(boxes, values))
+	"""
+	Convert grid into a dict of {square: char} with '123456789' for empties.
+	Args:
+		grid(string) - A grid in string form.
+	Returns:
+		A grid in dictionary form
+			Keys: The boxes, e.g., 'A1'
+			Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
+	"""
+	# Taken from Strategy 1: Elimination lesson
+	values = []
+	for box in grid:
+		if box == '.':
+			values.append(cols) # cols being 1 - 9
+		elif box in cols:
+			values.append(box)
+	assert len(values) == 81
+	return dict(zip(boxes, values))
 
 def display(values):
-    """
-    Display the values as a 2-D grid.
-    Args:
-        values(dict): The sudoku in dictionary form
-    """
-    # Taken from Strategy 1: Elimination lesson
-    boxes = cross(rows, cols)
-    width = 1 + max(len(values[box]) for box in boxes)
-    line = '+'.join(['-'*(width*3)]*3)
-    for row in rows:
-        print(''.join(values[row+col].center(width)+('|' if col in '36' else '')
-                      for col in cols))
-        if row in 'CF': print(line)
-    return
-
+	"""
+	Display the values as a 2-D grid.
+	Args:
+		values(dict): The sudoku in dictionary form
+	"""
+	# Taken from Strategy 1: Elimination lesson
+	boxes = cross(rows, cols)
+	width = 1 + max(len(values[box]) for box in boxes)
+	line = '+'.join(['-'*(width*3)]*3)
+	for row in rows:
+		print(''.join(values[row+col].center(width)+('|' if col in '36' else '')
+					  for col in cols))
+		if row in 'CF': print(line)
+	return
 
 def eliminate(values):
-    solved = [key for key in values.keys() if len(values[key]) == 1]
-    for idx in solved:
-        for peer in peers[idx]:
-            assign_value(values, peer, values[peer].replace(values[idx], ''))
-            #values[peer] = values[peer].replace(values[idx], '')
-    return values
+	solved = [key for key in values.keys() if len(values[key]) == 1]
+	for idx in solved:
+		for peer in peers[idx]:
+			assign_value(values, peer, values[peer].replace(values[idx], ''))
+			#values[peer] = values[peer].replace(values[idx], '')
+	return values
 
 def only_choice(values):
-    for unit in unitlist:
-        for i in cols:
-            place = [box for box in unit if i in values[box]]
-            if len(place) == 1:
-                assign_value(values, place[0], i)
-                #values[place[0]] = i
-    return values
+	for unit in unitlist:
+		for i in cols:
+			place = [box for box in unit if i in values[box]]
+			if len(place) == 1:
+				assign_value(values, place[0], i)
+				#values[place[0]] = i
+	return values
+
 
 def solved(values, length = 1):
-    return len([box for box in values.keys() if len(values[box]) == length])
+	# Return number of boxes with number of possibilities == len
+	return len([box for box in values.keys() if len(values[box]) == length])
 
 def reduce_puzzle(values):
-    stalled = False
-    print("REDUCING")
-    while not stalled:
-        solved_before = solved(values)
-        print("Solved before: ", solved_before)
+	stalled = False
+	#print("REDUCING")
+	while not stalled:
+		solved_before = solved(values)
+		#print("Solved before: ", solved_before)
 
-        values = only_choice(eliminate(values))
+		values = only_choice(naked_twins(eliminate(values)))
 
-        solved_after = solved(values)
-        print("Solved after: ", solved_after)
+		solved_after = solved(values)
+		#print("Solved after: ", solved_after)
 
-        stalled = solved_before == solved_after
+		stalled = solved_before == solved_after
 
-        if solved(values, 0):
-            return False
-    return values
-
+		if solved(values, 0):
+			return False
+	return values
 
 def search(values):
-    values = reduce_puzzle(values)
+	values = reduce_puzzle(values)
 
-    if values is False:
-        return False
-    elif all(len(values[box]) == 1 for box in boxes):
-        return values
+	if values is False:
+		return False
+	elif all(len(values[box]) == 1 for box in boxes):
+		return values
 
-    _, box = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
+	_, box = min((len(values[box]), box) for box in boxes if len(values[box]) > 1)
 
-    for value in values[box]:
-        print("SEARCHING")
-        puzzle = values.copy()
-        puzzle[box] = value
-        run = search(puzzle)
-        if run:
-            return run
+	for value in values[box]:
+		#print("SEARCHING")
+		puzzle = values.copy()
+		puzzle[box] = value
+		run = search(puzzle)
+		if run:
+			return run
 
 def solve(grid):
-    """
-    Find the solution to a Sudoku grid.
-    Args:
-    grid(string): a string representing a sudoku grid.
-    Example: '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-    Returns:
-    The dictionary representation of the final sudoku grid. False if no solution exists.
-    """
-    print("Solving...")
-    return search(grid_values(grid))
+	"""
+	Find the solution to a Sudoku grid.
+	Args:
+	grid(string): a string representing a sudoku grid.
+	Example: '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+	Returns:
+	The dictionary representation of the final sudoku grid. False if no solution exists.
+	"""
+	return search(grid_values(grid))
 
 if __name__ == '__main__':
-    grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
-    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-    display(solve(grid2))
-    display(solve(diag_sudoku_grid))
+	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
+	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+	#display(solve(grid2))
+	display(solve(diag_sudoku_grid))
 
+"""
+	try:
+		from visualize import visualize_assignments
+		visualize_assignments(assignments)
 
-    try:
-        from visualize import visualize_assignments
-        visualize_assignments(assignments)
-
-    except SystemExit:
-        pass
-    except:
-        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+	except SystemExit:
+		pass
+	except:
+		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+"""
