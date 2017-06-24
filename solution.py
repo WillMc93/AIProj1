@@ -51,15 +51,13 @@ def naked_twins(values):
 	"""
 
 	# Find all instances of naked twins
-	twinlist = []
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
-	bigtwinlist = [(box1, box2) for box1 in pairlist for box2 in peers[box1] \
-				if set(values[box1]) == set(values[box2])]
-	# Eliminate duplicate tuples, probably unnecessary
-	for tupl in bigtwinlist:
-		if tupl[::-1] not in twinlist:
-			twinlist.append(tupl)
-	#print(len(bigtwinlist), len(twinlist))
+
+	twinlist = []
+	for box1 in pairlist:
+		for box2 in peers[box1]:
+			if set(values[box1]) == set(values[box2]) and (box2, box1) not in twinlist:
+				twinlist.append((box1, box2))
 
 	# Eliminate the naked twins as possibilities for their peers
 	for twins in twinlist:
@@ -128,27 +126,29 @@ def only_choice(values):
 	return values
 
 
-def solved(values, length = 1):
+def num_possible(values, length = 1):
 	# Return number of boxes with number of possibilities == length
 	return len([box for box in values.keys() if len(values[box]) == length])
 
-def reduce_puzzle(values):
+def reduce_puzzle(values, test=[1,2,3]):
 	stalled = False
 	#print("REDUCING")
+	funcs = {1: eliminate,
+			 2: only_choice,
+			 3: naked_twins}
 	while not stalled:
-		solved_before = solved(values)
+		solved_before = num_possible(values)
 		#print("Solved before: ", solved_before)
 
-		values = eliminate(values)
-		values = only_choice(values)
-		values = naked_twins(values)
+		for t in test:
+			values = funcs[t](values)
 
-		solved_after = solved(values)
+		solved_after = num_possible(values)
 		#print("Solved after: ", solved_after)
 
 		stalled = solved_before == solved_after
 
-		if solved(values, 0):
+		if num_possible(values, 0):
 			return False
 	return values
 
@@ -182,11 +182,19 @@ def solve(grid):
 	return search(grid_values(grid))
 
 if __name__ == '__main__':
+	import timeit
+
+	tests = [[1,2,3], [2,1,3], [2,3,1],
+			 [1,3,2], [3,2,1], [3,1,2]]
+
 	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
 	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
 	#display(solve(grid2))
+	start_time = timeit.default_timer()
 	display(solve(diag_sudoku_grid))
+	print('Time: ', timeit.default_timer() - start_time)
 
+	"""
 	try:
 		from visualize import visualize_assignments
 		visualize_assignments(assignments)
@@ -195,3 +203,4 @@ if __name__ == '__main__':
 		pass
 	except:
 		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+	"""
