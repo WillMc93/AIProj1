@@ -21,7 +21,6 @@ unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
-current_test = [1,2,3]
 
 # Function Declarations
 def assign_value(values, box, value):
@@ -39,18 +38,9 @@ def assign_value(values, box, value):
 		assignments.append(values.copy())
 	return values
 
-def naked_twins(values):
-	"""Eliminate values using the naked twins strategy.
-	Args:
-		values(dict): a dictionary of the form {'box_name': '123456789', ...}
-
-	Returns:
-		the values dictionary with the naked twins eliminated from peers.
-	"""
-
+def naked_twins_proper(values):
 	# Find all instances of naked twins
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
-  
 	twinlist = []
 	for box1 in pairlist:
 		for box2 in peers[box1]:
@@ -69,6 +59,32 @@ def naked_twins(values):
 					assign_value(values, peer, values[peer].replace(i, ''))
 	#print(values)
 	return values
+
+# My original solution did not pass udacity submit requirements, but passed solution_test
+# So we are going to go unit by unit like the project intro suggested
+def naked_twins(values):
+	for unit in unitlist:
+		twindict = {}
+		for box in unit:
+			# Find and record pairs as {value: [box1, [box2]]}
+			if len(values[box]) == 2 and values[box] not in twindict.keys():
+				twindict[values[box]] = [box]
+			# If we've found a twin
+			elif values[box] in twindict.keys():
+				twindict[values[box]].append(box)
+				# Sanity check
+				assert len(twindict[values[box]]) == 2, "Returned length: %r" % (len(twindict[values[box]]))
+		for value in twindict.keys():
+			if len(twindict[value]) != 2: continue
+			for box in unit:
+				for i in value:
+					if len(values[box]) > 2:
+						assign_value(values, box, values[box].replace(i, ''))
+
+	return values
+
+
+
 
 def grid_values(grid):
 	"""
@@ -124,29 +140,27 @@ def only_choice(values):
 	return values
 
 
-def num_possible(values, length = 1):
+def solved(values, length = 1):
 	# Return number of boxes with number of possibilities == length
 	return len([box for box in values.keys() if len(values[box]) == length])
 
-def reduce_puzzle(values, test = current_test):
+def reduce_puzzle(values):
 	stalled = False
 	#print("REDUCING")
-	funcs = {1: eliminate,
-			 2: only_choice,
-			 3: naked_twins}
 	while not stalled:
-		solved_before = num_possible(values)
+		solved_before = solved(values)
 		#print("Solved before: ", solved_before)
 
-		for t in test:
-			values = funcs[t](values)
+		values = eliminate(values)
+		values = only_choice(values)
+		values = naked_twins(values)
 
-		solved_after = num_possible(values)
+		solved_after = solved(values)
 		#print("Solved after: ", solved_after)
 
 		stalled = solved_before == solved_after
 
-		if num_possible(values, 0):
+		if solved(values, 0):
 			return False
 	return values
 
@@ -180,12 +194,35 @@ def solve(grid):
 	return search(grid_values(grid))
 
 if __name__ == '__main__':
-
+	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
 	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
 	#display(solve(grid2))
-	display(solve(diag_sudoku_grid))
+	#display(solve(diag_sudoku_grid))
 
-	"""
+
+	g = {"G7": "2345678", "G6": "1236789", "G5": "23456789", "G4": "345678",
+		 "G3": "1234569", "G2": "12345678", "G1": "23456789", "G9": "24578",
+		 "G8": "345678", "C9": "124578", "C8": "3456789", "C3": "1234569",
+		 "C2": "1234568", "C1": "2345689", "C7": "2345678", "C6": "236789",
+		 "C5": "23456789", "C4": "345678", "E5": "678", "E4": "2", "F1": "1",
+		 "F2": "24", "F3": "24", "F4": "9", "F5": "37", "F6": "37", "F7": "58",
+		 "F8": "58", "F9": "6", "B4": "345678", "B5": "23456789",
+		 "B6":"236789", "B7": "2345678", "B1": "2345689", "B2": "1234568",
+		 "B3":"1234569", "B8": "3456789", "B9": "124578", "I9": "9", "I8": "345678",
+		 "I1": "2345678", "I3": "23456", "I2": "2345678", "I5": "2345678",
+		 "I4": "345678", "I7": "1", "I6": "23678", "A1": "2345689", "A3": "7",
+		 "A2": "234568", "E9": "3", "A4": "34568", "A7": "234568", "A6":
+		 "23689", "A9": "2458", "A8": "345689", "E7": "9", "E6": "4", "E1":
+		 "567", "E3": "56", "E2": "567", "E8": "1", "A5": "1", "H8": "345678",
+		 "H9": "24578", "H2": "12345678", "H3": "1234569", "H1": "23456789",
+		 "H6": "1236789", "H7": "2345678", "H4": "345678", "H5": "23456789",
+		 "D8": "2", "D9": "47", "D6": "5", "D7": "47", "D4": "1", "D5": "36",
+		 "D2": "9", "D3": "8", "D1": "36"}
+
+	display(g)
+	print('\n')
+	display(naked_twins(g))
+
 	try:
 		from visualize import visualize_assignments
 		visualize_assignments(assignments)
@@ -194,4 +231,5 @@ if __name__ == '__main__':
 		pass
 	except:
 		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
-	"""
+Contact GitHub API Training Shop Blog About
+© 2017 GitHub, Inc. Terms Privacy Security Status Help
