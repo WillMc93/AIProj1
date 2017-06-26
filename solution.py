@@ -7,11 +7,8 @@ def cross(A, B): # needed here
 	return [a+n for a in A for n in B]
 
 def generate_diagonals():
-	A = []
-	B = []
-	for i in range(len(rows)):
-		A.append(rows[i]+cols[i])
-		B.append(rows[i]+cols[-i - 1])
+	A = [r+c for (r,c) in zip(rows, cols)]
+	B = [r+c for (r,c) in zip(rows, cols[::-1])]
 	return [A, B]
 
 boxes = cross(rows, cols)
@@ -51,15 +48,12 @@ def naked_twins(values):
 	"""
 
 	# Find all instances of naked twins
-	twinlist = []
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
-	bigtwinlist = [(box1, box2) for box1 in pairlist for box2 in peers[box1] \
-				if set(values[box1]) == set(values[box2])]
-	# Eliminate duplicate tuples, probably unnecessary
-	for tupl in bigtwinlist:
-		if tupl[::-1] not in twinlist:
-			twinlist.append(tupl)
-	#print(len(bigtwinlist), len(twinlist))
+	twinlist = []
+	for box1 in pairlist:
+		for box2 in peers[box1]:
+			if set(values[box1]) == set(values[box2]) and (box2, box1) not in twinlist:
+				twinlist.append((box1, box2))
 
 	# Eliminate the naked twins as possibilities for their peers
 	for twins in twinlist:
