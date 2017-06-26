@@ -3,17 +3,17 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: By calling naked_twins() on the constrained puzzle from eliminate() and only_choice(), we shrink the number of possibles for eliminate() and only_choice() when we call them next loop.
+A: *By calling naked_twins() on the constrained puzzle from eliminate() and only_choice(), we shrink the number of possibles for eliminate() and only_choice() when we call them next loop.
    The repetition of eliminate() and only_choice() further shrinks the number of possibles for naked_twins() when it is called again.
-   The repetition of this process of shrinking is constraint propagation. When combined with search(), we should be able to solve any Sudoku puzzle relatively quickly using this method.
+   The repetition of this process of shrinking is constraint propagation. When combined with search(), we should be able to solve any Sudoku puzzle relatively quickly using this method.*
 
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal Sudoku problem?  
-A: Diagonal Sudoku is easily solved by adding the diagonals to the list of units, where they will then be treated like any other row, column, or square by eliminate(), only_choice(), and naked_twins().
+A: *Diagonal Sudoku is easily solved by adding the diagonals to the list of units, where they will then be treated like any other row, column, or square by eliminate(), only_choice(), and naked_twins().
    Diagonal Sudoku shrinks the problem pretty quickly by reducing the number of possibles for 17 squares by additional constraints. All squares in regular Sudoku have 3 constraints(they must be unique
    with respect to their square, row, column). Diagonal Sudoku adds two constraints for the middle-most square (it must be unique in both diagonals) and one constraint for every other diagonal square
-   (they must be unique in their respective diagonals).
+   (they must be unique in their respective diagonals).*
 
 
 ### Install
