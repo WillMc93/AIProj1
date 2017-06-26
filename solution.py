@@ -21,6 +21,7 @@ unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
+current_test = [1,2,3]
 
 # Function Declarations
 def assign_value(values, box, value):
@@ -41,6 +42,7 @@ def assign_value(values, box, value):
 def naked_twins_proper(values):
 	# Find all instances of naked twins
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
+  
 	twinlist = []
 	for box1 in pairlist:
 		for box2 in peers[box1]:
@@ -140,27 +142,29 @@ def only_choice(values):
 	return values
 
 
-def solved(values, length = 1):
+def num_possible(values, length = 1):
 	# Return number of boxes with number of possibilities == length
 	return len([box for box in values.keys() if len(values[box]) == length])
 
-def reduce_puzzle(values):
+def reduce_puzzle(values, test = current_test):
 	stalled = False
 	#print("REDUCING")
+	funcs = {1: eliminate,
+			 2: only_choice,
+			 3: naked_twins}
 	while not stalled:
-		solved_before = solved(values)
+		solved_before = num_possible(values)
 		#print("Solved before: ", solved_before)
 
-		values = eliminate(values)
-		values = only_choice(values)
-		values = naked_twins(values)
+		for t in test:
+			values = funcs[t](values)
 
-		solved_after = solved(values)
+		solved_after = num_possible(values)
 		#print("Solved after: ", solved_after)
 
 		stalled = solved_before == solved_after
 
-		if solved(values, 0):
+		if num_possible(values, 0):
 			return False
 	return values
 
@@ -194,7 +198,7 @@ def solve(grid):
 	return search(grid_values(grid))
 
 if __name__ == '__main__':
-	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
+
 	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
 	#display(solve(grid2))
 	#display(solve(diag_sudoku_grid))
@@ -223,6 +227,7 @@ if __name__ == '__main__':
 	print('\n')
 	display(naked_twins(g))
 
+	"""
 	try:
 		from visualize import visualize_assignments
 		visualize_assignments(assignments)
@@ -231,3 +236,4 @@ if __name__ == '__main__':
 		pass
 	except:
 		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+	"""
