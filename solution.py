@@ -63,6 +63,7 @@ def naked_twins_proper(values):
 # My original solution did not pass udacity submit requirements, but passed solution_test
 # So we are going to go unit by unit like the project intro suggested
 def naked_twins(values):
+	"""
 	for unit in unitlist:
 		twindict = {}
 		for box in unit:
@@ -77,10 +78,32 @@ def naked_twins(values):
 		for value in twindict.keys():
 			if len(twindict[value]) != 2: continue
 			for box in unit:
-				for i in value:
-					if len(values[box]) > 2:
+				if len(values[box]) > 2 and (box != twindict[value][0] or box != twindict[value][1]):
+					for i in value:
 						assign_value(values, box, values[box].replace(i, ''))
 
+	return values
+	"""
+	for unit in unitlist:
+		# Find all instances of naked twins
+		pairlist = [box for box in unit if len(values[box]) == 2]
+		twinlist = []
+		for box1 in pairlist:
+			for box2 in peers[box1]:
+				if set(values[box1]) == set(values[box2]) and (box2, box1) not in twinlist:
+					twinlist.append((box1, box2))
+
+		# Eliminate the naked twins as possibilities for their peers
+		for twins in twinlist:
+			# get only mutual peers
+			mutual = set(peers[twins[0]]) & set(peers[twins[1]])
+			twin = twins[0]
+
+			for peer in mutual:
+				if len(values[peer]) > 2:
+					for i in values[twin]:
+						assign_value(values, peer, values[peer].replace(i, ''))
+		#print(values)
 	return values
 
 
@@ -199,7 +222,7 @@ if __name__ == '__main__':
 	#display(solve(grid2))
 	#display(solve(diag_sudoku_grid))
 
-
+	"""
 	g = {"G7": "2345678", "G6": "1236789", "G5": "23456789", "G4": "345678",
 		 "G3": "1234569", "G2": "12345678", "G1": "23456789", "G9": "24578",
 		 "G8": "345678", "C9": "124578", "C8": "3456789", "C3": "1234569",
@@ -222,6 +245,7 @@ if __name__ == '__main__':
 	display(g)
 	print('\n')
 	display(naked_twins(g))
+	"""
 
 	try:
 		from visualize import visualize_assignments
