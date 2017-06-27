@@ -38,8 +38,15 @@ def assign_value(values, box, value):
 		assignments.append(values.copy())
 	return values
 
-def naked_twins_proper(values):
-	# Find all instances of naked twins
+def naked_twins(values):
+	"""
+	Eliminate values using the naked twins strategy.
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+    Returns:
+        the values dictionary with the naked twins eliminated from peers.
+    """
+
 	pairlist = [box for box in values.keys() if len(values[box]) == 2]
 	twinlist = []
 	for box1 in pairlist:
@@ -51,63 +58,16 @@ def naked_twins_proper(values):
 	for twins in twinlist:
 		# get only mutual peers
 		mutual = set(peers[twins[0]]) & set(peers[twins[1]])
+
+		# since we know they are equal
 		twin = twins[0]
 
 		for peer in mutual:
-			if len(values[peer]) > 2:
+			if len(values[peer]) > 1 and peer not in twinlist:
 				for i in values[twin]:
 					assign_value(values, peer, values[peer].replace(i, ''))
 	#print(values)
 	return values
-
-# My original solution did not pass udacity submit requirements, but passed solution_test
-# So we are going to go unit by unit like the project intro suggested
-def naked_twins(values):
-	"""
-	for unit in unitlist:
-		twindict = {}
-		for box in unit:
-			# Find and record pairs as {value: [box1, [box2]]}
-			if len(values[box]) == 2 and values[box] not in twindict.keys():
-				twindict[values[box]] = [box]
-			# If we've found a twin
-			elif values[box] in twindict.keys():
-				twindict[values[box]].append(box)
-				# Sanity check
-				assert len(twindict[values[box]]) == 2, "Returned length: %r" % (len(twindict[values[box]]))
-		for value in twindict.keys():
-			if len(twindict[value]) != 2: continue
-			for box in unit:
-				if len(values[box]) > 2 and (box != twindict[value][0] or box != twindict[value][1]):
-					for i in value:
-						assign_value(values, box, values[box].replace(i, ''))
-
-	return values
-	"""
-	for unit in unitlist:
-		# Find all instances of naked twins
-		pairlist = [box for box in unit if len(values[box]) == 2]
-		twinlist = []
-		for box1 in pairlist:
-			for box2 in peers[box1]:
-				if set(values[box1]) == set(values[box2]) and (box2, box1) not in twinlist:
-					twinlist.append((box1, box2))
-
-		# Eliminate the naked twins as possibilities for their peers
-		for twins in twinlist:
-			# get only mutual peers
-			mutual = set(peers[twins[0]]) & set(peers[twins[1]])
-			twin = twins[0]
-
-			for peer in mutual:
-				if len(values[peer]) > 2:
-					for i in values[twin]:
-						assign_value(values, peer, values[peer].replace(i, ''))
-		#print(values)
-	return values
-
-
-
 
 def grid_values(grid):
 	"""
@@ -149,6 +109,7 @@ def eliminate(values):
 	solved = [key for key in values.keys() if len(values[key]) == 1]
 	for idx in solved:
 		for peer in peers[idx]:
+
 			assign_value(values, peer, values[peer].replace(values[idx], ''))
 			#values[peer] = values[peer].replace(values[idx], '')
 	return values
@@ -209,44 +170,21 @@ def solve(grid):
 	"""
 	Find the solution to a Sudoku grid.
 	Args:
-	grid(string): a string representing a sudoku grid.
-	Example: '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+		grid(string): a string representing a sudoku grid.
+			Example: '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
 	Returns:
-	The dictionary representation of the final sudoku grid. False if no solution exists.
+		The dictionary representation of the final sudoku grid. False if no solution exists.
 	"""
 	return search(grid_values(grid))
 
-if __name__ == '__main__':
-	#grid2 = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
-	diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
-	#display(solve(grid2))
-	#display(solve(diag_sudoku_grid))
+def set_diagonal_mode(switch=True):
+	unitlist = row_units + column_units + square_units
 
-	"""
-	g = {"G7": "2345678", "G6": "1236789", "G5": "23456789", "G4": "345678",
-		 "G3": "1234569", "G2": "12345678", "G1": "23456789", "G9": "24578",
-		 "G8": "345678", "C9": "124578", "C8": "3456789", "C3": "1234569",
-		 "C2": "1234568", "C1": "2345689", "C7": "2345678", "C6": "236789",
-		 "C5": "23456789", "C4": "345678", "E5": "678", "E4": "2", "F1": "1",
-		 "F2": "24", "F3": "24", "F4": "9", "F5": "37", "F6": "37", "F7": "58",
-		 "F8": "58", "F9": "6", "B4": "345678", "B5": "23456789",
-		 "B6":"236789", "B7": "2345678", "B1": "2345689", "B2": "1234568",
-		 "B3":"1234569", "B8": "3456789", "B9": "124578", "I9": "9", "I8": "345678",
-		 "I1": "2345678", "I3": "23456", "I2": "2345678", "I5": "2345678",
-		 "I4": "345678", "I7": "1", "I6": "23678", "A1": "2345689", "A3": "7",
-		 "A2": "234568", "E9": "3", "A4": "34568", "A7": "234568", "A6":
-		 "23689", "A9": "2458", "A8": "345689", "E7": "9", "E6": "4", "E1":
-		 "567", "E3": "56", "E2": "567", "E8": "1", "A5": "1", "H8": "345678",
-		 "H9": "24578", "H2": "12345678", "H3": "1234569", "H1": "23456789",
-		 "H6": "1236789", "H7": "2345678", "H4": "345678", "H5": "23456789",
-		 "D8": "2", "D9": "47", "D6": "5", "D7": "47", "D4": "1", "D5": "36",
-		 "D2": "9", "D3": "8", "D1": "36"}
+	unitlist = unitlist + diagonal_units if switch else unitlist
 
-	display(g)
-	print('\n')
-	display(naked_twins(g))
-	"""
+	return
 
+def run_pygame():
 	try:
 		from visualize import visualize_assignments
 		visualize_assignments(assignments)
@@ -255,3 +193,10 @@ if __name__ == '__main__':
 		pass
 	except:
 		print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+
+
+if __name__ == '__main__':
+	grid3 = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+
+	display(solve(grid3))
+	run_pygame()
